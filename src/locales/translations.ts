@@ -45,11 +45,11 @@ export const translations: Record<"en" | "fr", Translations> = {
       ],
       quickFacts: "Quick facts",
       facts: [
-        { label: "Location", value: "Paris, France 🇫🇷" },
+        { label: "Location", value: "Casablanca, Morocco 🇲🇦" },
         { label: "Education", value: "M.Sc. Computer Science" },
         { label: "Languages", value: "French, English" },
         { label: "Availability", value: "Open to full-time & freelance" },
-        { label: "Timezone", value: "CET (UTC+1)" },
+        { label: "Timezone", value: "GMT (UTC+1)" },
       ],
       downloadCv: "Download CV",
     },

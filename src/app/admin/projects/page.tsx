@@ -32,6 +32,12 @@ async function getUploadAccessToken(supabase: SupabaseBrowserClient) {
     return refreshedSession.access_token;
   }
 
+  const storedToken = sessionStorage.getItem("portfolio_admin_access_token");
+
+  if (storedToken) {
+    return storedToken;
+  }
+
   throw new Error(
     "Session admin introuvable. Déconnectez-vous puis reconnectez-vous."
   );

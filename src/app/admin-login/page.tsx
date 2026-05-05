@@ -18,7 +18,7 @@ export default function AdminLoginPage() {
     setError(null);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -26,6 +26,13 @@ export default function AdminLoginPage() {
       if (error) {
         setError(error.message);
         return;
+      }
+
+      if (data.session?.access_token) {
+        sessionStorage.setItem(
+          'portfolio_admin_access_token',
+          data.session.access_token
+        );
       }
 
       router.push('/admin');

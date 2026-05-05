@@ -6,6 +6,27 @@ import type { Database } from "@/utils/supabase/database.types";
 
 type HeroContent = Database["public"]["Tables"]["hero_content"]["Row"];
 
+async function uploadAdminAsset(file: File, folder: "hero" | "cv") {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("folder", folder);
+
+  const response = await fetch("/api/admin/upload", {
+    method: "POST",
+    body: formData,
+  });
+  const result = (await response.json()) as {
+    publicUrl?: string;
+    error?: string;
+  };
+
+  if (!response.ok || !result.publicUrl) {
+    throw new Error(result.error || "Erreur lors de l'upload.");
+  }
+
+  return result.publicUrl;
+}
+
 export default function HeroEditorPage() {
   const [content, setContent] = useState<HeroContent | null>(null);
   const [loading, setLoading] = useState(true);
@@ -91,27 +112,7 @@ export default function HeroEditorPage() {
     setMessage(null);
 
     try {
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-      const filePath = `hero/${fileName}`;
-
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from("portfolio-images")
-        .upload(filePath, file, {
-          cacheControl: "3600",
-          upsert: false,
-        });
-
-      if (uploadError) {
-        console.error("Upload error:", uploadError);
-        throw new Error(uploadError.message);
-      }
-
-      const { data: urlData } = supabase.storage
-        .from("portfolio-images")
-        .getPublicUrl(filePath);
-
-      const publicUrl = urlData.publicUrl;
+      const publicUrl = await uploadAdminAsset(file, "hero");
 
       if (!content) return;
 
@@ -162,27 +163,7 @@ export default function HeroEditorPage() {
     setMessage(null);
 
     try {
-      const fileExt = "pdf";
-      const fileName = `cv-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-      const filePath = `cv/${fileName}`;
-
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from("portfolio-images")
-        .upload(filePath, file, {
-          cacheControl: "3600",
-          upsert: false,
-        });
-
-      if (uploadError) {
-        console.error("Upload error:", uploadError);
-        throw new Error(uploadError.message);
-      }
-
-      const { data: urlData } = supabase.storage
-        .from("portfolio-images")
-        .getPublicUrl(filePath);
-
-      const publicUrl = urlData.publicUrl;
+      const publicUrl = await uploadAdminAsset(file, "cv");
 
       if (!content) return;
 

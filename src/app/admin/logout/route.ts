@@ -1,8 +1,9 @@
 import { createClient } from '@/utils/supabase/server';
+import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const supabase = await createClient();
   await supabase.auth.signOut();
-  return NextResponse.redirect(new URL('/admin/login', process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:4028'));
+  return NextResponse.redirect(new URL('/admin-login', request.url));
 }

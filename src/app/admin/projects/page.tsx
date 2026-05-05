@@ -13,6 +13,27 @@ import {
 
 type Project = Database["public"]["Tables"]["projects"]["Row"];
 
+async function uploadAdminAsset(file: File, folder: "projects") {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("folder", folder);
+
+  const response = await fetch("/api/admin/upload", {
+    method: "POST",
+    body: formData,
+  });
+  const result = (await response.json()) as {
+    publicUrl?: string;
+    error?: string;
+  };
+
+  if (!response.ok || !result.publicUrl) {
+    throw new Error(result.error || "Erreur lors de l'upload.");
+  }
+
+  return result.publicUrl;
+}
+
 export default function ProjectsEditorPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -196,19 +217,7 @@ export default function ProjectsEditorPage() {
     if (!file) return;
 
     try {
-      const fileExt = file.name.split(".").pop();
-      const filePath = `projects/${Date.now()}.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("portfolio-images")
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("portfolio-images").getPublicUrl(filePath);
-
+      const publicUrl = await uploadAdminAsset(file, "projects");
       setFormData({ ...formData, image_url: publicUrl });
     } catch (err: unknown) {
       setMessage({

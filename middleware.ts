@@ -4,27 +4,23 @@ import { createClientForMiddleware } from "@/utils/supabase/middleware";
 
 export async function middleware(request: NextRequest) {
   const { supabase, response } = createClientForMiddleware(request);
+  const { pathname } = request.nextUrl;
 
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // If trying to access admin routes without authentication
-  if (request.nextUrl.pathname.startsWith("/admin")) {
-    // Skip middleware completely for login page
-    if (request.nextUrl.pathname === "/admin-login") {
-      return response;
-    }
-
-    // If already logged in, redirect to admin dashboard
+  if (pathname === "/admin-login") {
     if (user) {
       return NextResponse.redirect(new URL("/admin", request.url));
     }
 
-    // Redirect to login if not authenticated
+    return response;
+  }
+
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) {
     if (!user) {
-      const loginUrl = new URL("/admin-login", request.url);
-      return NextResponse.redirect(loginUrl);
+      return NextResponse.redirect(new URL("/admin-login", request.url));
     }
   }
 

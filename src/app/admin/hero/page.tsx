@@ -6,13 +6,19 @@ import type { Database } from "@/utils/supabase/database.types";
 
 type HeroContent = Database["public"]["Tables"]["hero_content"]["Row"];
 
-async function uploadAdminAsset(file: File, folder: "hero" | "cv") {
+async function uploadAdminAsset(
+  file: File,
+  folder: "hero" | "cv",
+  accessToken?: string
+) {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("folder", folder);
 
   const response = await fetch("/api/admin/upload", {
     method: "POST",
+    credentials: "same-origin",
+    headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
     body: formData,
   });
   const result = (await response.json()) as {
@@ -112,7 +118,14 @@ export default function HeroEditorPage() {
     setMessage(null);
 
     try {
-      const publicUrl = await uploadAdminAsset(file, "hero");
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const publicUrl = await uploadAdminAsset(
+        file,
+        "hero",
+        session?.access_token
+      );
 
       if (!content) return;
 
@@ -163,7 +176,14 @@ export default function HeroEditorPage() {
     setMessage(null);
 
     try {
-      const publicUrl = await uploadAdminAsset(file, "cv");
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const publicUrl = await uploadAdminAsset(
+        file,
+        "cv",
+        session?.access_token
+      );
 
       if (!content) return;
 

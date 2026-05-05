@@ -13,13 +13,19 @@ import {
 
 type Project = Database["public"]["Tables"]["projects"]["Row"];
 
-async function uploadAdminAsset(file: File, folder: "projects") {
+async function uploadAdminAsset(
+  file: File,
+  folder: "projects",
+  accessToken?: string
+) {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("folder", folder);
 
   const response = await fetch("/api/admin/upload", {
     method: "POST",
+    credentials: "same-origin",
+    headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
     body: formData,
   });
   const result = (await response.json()) as {
@@ -217,7 +223,14 @@ export default function ProjectsEditorPage() {
     if (!file) return;
 
     try {
-      const publicUrl = await uploadAdminAsset(file, "projects");
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const publicUrl = await uploadAdminAsset(
+        file,
+        "projects",
+        session?.access_token
+      );
       setFormData({ ...formData, image_url: publicUrl });
     } catch (err: unknown) {
       setMessage({

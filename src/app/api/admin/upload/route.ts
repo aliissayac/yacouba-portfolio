@@ -9,7 +9,7 @@ const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const MAX_PDF_SIZE = 10 * 1024 * 1024;
 const ALLOWED_FOLDERS = new Set(["hero", "projects", "cv"]);
 
-function getAdminStorageClient() {
+function getAdminSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -23,6 +23,33 @@ function getAdminStorageClient() {
       autoRefreshToken: false,
     },
   });
+}
+
+async function getAuthenticatedUser(request: Request) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    return user;
+  }
+
+  const authorization = request.headers.get("authorization");
+  const token = authorization?.startsWith("Bearer ")
+    ? authorization.slice("Bearer ".length)
+    : null;
+
+  if (!token) {
+    return null;
+  }
+
+  const adminSupabase = getAdminSupabaseClient();
+  const {
+    data: { user: bearerUser },
+  } = await adminSupabase.auth.getUser(token);
+
+  return bearerUser;
 }
 
 function getSafeFileName(file: File, folder: string) {
@@ -59,10 +86,7 @@ function validateFile(file: File, folder: string) {
 }
 
 export async function POST(request: Request) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getAuthenticatedUser(request);
 
   if (!user) {
     return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
@@ -84,7 +108,7 @@ export async function POST(request: Request) {
     validateFile(file, folder);
 
     const filePath = getSafeFileName(file, folder);
-    const adminSupabase = getAdminStorageClient();
+    const adminSupabase = getAdminSupabaseClient();
 
     const { error: uploadError } = await adminSupabase.storage
       .from(BUCKET)

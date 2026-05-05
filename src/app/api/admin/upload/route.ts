@@ -25,6 +25,27 @@ function getAdminSupabaseClient() {
   });
 }
 
+function getUserSupabaseClient(token: string) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !anonKey) {
+    throw new Error("Supabase user auth is not configured.");
+  }
+
+  return createSupabaseAdminClient(supabaseUrl, anonKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+    global: {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  });
+}
+
 async function getAuthenticatedUser(request: Request) {
   const supabase = await createClient();
   const {
@@ -44,10 +65,10 @@ async function getAuthenticatedUser(request: Request) {
     return null;
   }
 
-  const adminSupabase = getAdminSupabaseClient();
+  const userSupabase = getUserSupabaseClient(token);
   const {
     data: { user: bearerUser },
-  } = await adminSupabase.auth.getUser(token);
+  } = await userSupabase.auth.getUser();
 
   return bearerUser;
 }

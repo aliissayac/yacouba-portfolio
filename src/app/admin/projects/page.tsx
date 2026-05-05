@@ -13,6 +13,30 @@ import {
 
 type Project = Database["public"]["Tables"]["projects"]["Row"];
 
+type SupabaseBrowserClient = ReturnType<typeof createClient>;
+
+async function getUploadAccessToken(supabase: SupabaseBrowserClient) {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (session?.access_token) {
+    return session.access_token;
+  }
+
+  const {
+    data: { session: refreshedSession },
+  } = await supabase.auth.refreshSession();
+
+  if (refreshedSession?.access_token) {
+    return refreshedSession.access_token;
+  }
+
+  throw new Error(
+    "Session admin introuvable. Déconnectez-vous puis reconnectez-vous."
+  );
+}
+
 async function uploadAdminAsset(
   file: File,
   folder: "projects",
@@ -223,13 +247,11 @@ export default function ProjectsEditorPage() {
     if (!file) return;
 
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      const accessToken = await getUploadAccessToken(supabase);
       const publicUrl = await uploadAdminAsset(
         file,
         "projects",
-        session?.access_token
+        accessToken
       );
       setFormData({ ...formData, image_url: publicUrl });
     } catch (err: unknown) {

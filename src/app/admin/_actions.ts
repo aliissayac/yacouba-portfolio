@@ -16,18 +16,24 @@ type ActionResult = { success: true } | { success: false; error: string };
 
 async function getVerifiedAdminClient() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
-  if (!user) throw new Error("Non autorisé. Reconnectez-vous.");
+  // getSession() validates the JWT locally (no network call to Supabase).
+  // getUser() can fail in Vercel serverless due to the extra network hop.
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session?.access_token) {
+    throw new Error("Session expirée. Veuillez vous déconnecter puis reconnecter.");
+  }
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key)
+  if (!url || !key) {
     throw new Error(
-      "SUPABASE_SERVICE_ROLE_KEY manquante. Ajoutez-la dans les variables d'environnement Vercel."
+      "Variable SUPABASE_SERVICE_ROLE_KEY manquante. Ajoutez-la dans Settings → Environment Variables sur Vercel, puis redéployez."
     );
+  }
 
   return createSupabaseAdminClient(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },

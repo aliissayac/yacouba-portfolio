@@ -154,9 +154,11 @@ export default function ProjectsEditorPage() {
 
     try {
       if (editingId) {
-        await adminUpdate("projects", editingId, payload);
+        const r1 = await adminUpdate("projects", editingId, payload);
+        if (!r1.success) throw new Error(r1.error);
       } else {
-        await adminInsert("projects", payload);
+        const r1 = await adminInsert("projects", payload);
+        if (!r1.success) throw new Error(r1.error);
       }
 
       setMessage({
@@ -201,7 +203,8 @@ export default function ProjectsEditorPage() {
     if (!confirm("Supprimer ce projet ?")) return;
 
     try {
-      await adminDelete("projects", id);
+      const r2 = await adminDelete("projects", id);
+      if (!r2.success) throw new Error(r2.error);
       setMessage({ type: "success", text: "Projet supprimé." });
       fetchProjects();
     } catch (err: unknown) {

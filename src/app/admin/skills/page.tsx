@@ -82,7 +82,8 @@ export default function SkillsEditorPage() {
     );
 
     try {
-      await adminInsert("project_tags", { name: newToolName.trim(), sort_order: maxSortOrder + 1 });
+      const r1 = await adminInsert("project_tags", { name: newToolName.trim(), sort_order: maxSortOrder + 1 });
+      if (!r1.success) throw new Error(r1.error);
 
       setMessage({ type: "success", text: "Outil ajouté !" });
       setNewToolName("");
@@ -99,7 +100,8 @@ export default function SkillsEditorPage() {
     if (!confirm("Supprimer cet outil ?")) return;
 
     try {
-      await adminDelete("project_tags", id);
+      const r2 = await adminDelete("project_tags", id);
+      if (!r2.success) throw new Error(r2.error);
       setMessage({ type: "success", text: "Outil supprimé." });
       fetchTools();
     } catch (err: unknown) {
@@ -124,9 +126,11 @@ export default function SkillsEditorPage() {
 
     try {
       if (editingId) {
-        await adminUpdate("skills", editingId, payload);
+        const r3 = await adminUpdate("skills", editingId, payload);
+        if (!r3.success) throw new Error(r3.error);
       } else {
-        await adminInsert("skills", payload);
+        const r3 = await adminInsert("skills", payload);
+        if (!r3.success) throw new Error(r3.error);
       }
 
       setMessage({
@@ -160,7 +164,8 @@ export default function SkillsEditorPage() {
     if (!confirm("Supprimer cette compétence ?")) return;
 
     try {
-      await adminDelete("skills", id);
+      const r4 = await adminDelete("skills", id);
+      if (!r4.success) throw new Error(r4.error);
       setMessage({ type: "success", text: "Compétence supprimée." });
       fetchSkills();
     } catch (err: unknown) {

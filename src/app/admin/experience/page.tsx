@@ -66,9 +66,11 @@ export default function ExperienceEditorPage() {
 
     try {
       if (editingId) {
-        await adminUpdate('experience', editingId, payload);
+        const r1 = await adminUpdate('experience', editingId, payload);
+        if (!r1.success) throw new Error(r1.error);
       } else {
-        await adminInsert('experience', payload);
+        const r1 = await adminInsert('experience', payload);
+        if (!r1.success) throw new Error(r1.error);
       }
 
       setMessage({ type: 'success', text: editingId ? 'Expérience mise à jour !' : 'Expérience ajoutée !' });
@@ -99,7 +101,8 @@ export default function ExperienceEditorPage() {
     if (!confirm("Supprimer cette expérience ?")) return;
 
     try {
-      await adminDelete('experience', id);
+      const r2 = await adminDelete('experience', id);
+      if (!r2.success) throw new Error(r2.error);
       setMessage({ type: 'success', text: 'Expérience supprimée.' });
       fetchExperiences();
     } catch (err: unknown) {

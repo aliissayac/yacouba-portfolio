@@ -103,7 +103,7 @@ export default function HeroEditorPage() {
     setMessage(null);
 
     try {
-      await adminUpdate("hero_content", content.id, {
+      const r1 = await adminUpdate("hero_content", content.id, {
         title: content.title,
         subtitle: content.subtitle || null,
         description: content.description || null,
@@ -115,6 +115,7 @@ export default function HeroEditorPage() {
         image_url: content.image_url || null,
         cv_url: content.cv_url || null,
       });
+      if (!r1.success) throw new Error(r1.error);
 
       setMessage({
         type: "success",
@@ -153,7 +154,8 @@ export default function HeroEditorPage() {
 
       if (!content) return;
 
-      await adminUpdate("hero_content", content.id, { image_url: publicUrl });
+      const r2 = await adminUpdate("hero_content", content.id, { image_url: publicUrl });
+      if (!r2.success) throw new Error(r2.error);
 
       setContent((prev) => (prev ? { ...prev, image_url: publicUrl } : null));
       setMessage({
@@ -201,7 +203,8 @@ export default function HeroEditorPage() {
 
       if (!content) return;
 
-      await adminUpdate("hero_content", content.id, { cv_url: publicUrl });
+      const r3 = await adminUpdate("hero_content", content.id, { cv_url: publicUrl });
+      if (!r3.success) throw new Error(r3.error);
 
       setContent((prev) => (prev ? { ...prev, cv_url: publicUrl } : null));
       setMessage({

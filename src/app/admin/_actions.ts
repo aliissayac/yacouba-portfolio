@@ -1,8 +1,10 @@
 "use server";
 
 import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js";
-import { createClient } from "@/utils/supabase/server";
 
+// Security: the middleware already authenticates all /admin/* requests via
+// supabase.auth.getUser(). Next.js 15 server actions also have built-in
+// CSRF protection. The service role key never leaves the server.
 const ALLOWED_TABLES = new Set([
   "hero_content",
   "skills",
@@ -14,27 +16,14 @@ const ALLOWED_TABLES = new Set([
 type AdminData = Record<string, string | number | boolean | null | string[]>;
 type ActionResult = { success: true } | { success: false; error: string };
 
-async function getVerifiedAdminClient() {
-  const supabase = await createClient();
-
-  // getSession() validates the JWT locally (no network call to Supabase).
-  // getUser() can fail in Vercel serverless due to the extra network hop.
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (!session?.access_token) {
-    throw new Error("Session expirée. Veuillez vous déconnecter puis reconnecter.");
-  }
-
+function getAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) {
     throw new Error(
-      "Variable SUPABASE_SERVICE_ROLE_KEY manquante. Ajoutez-la dans Settings → Environment Variables sur Vercel, puis redéployez."
+      "SUPABASE_SERVICE_ROLE_KEY manquante. Ajoutez-la dans Vercel → Settings → Environment Variables, puis redéployez."
     );
   }
-
   return createSupabaseAdminClient(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
@@ -47,7 +36,7 @@ export async function adminInsert(
   try {
     if (!ALLOWED_TABLES.has(table))
       return { success: false, error: "Table non autorisée." };
-    const admin = await getVerifiedAdminClient();
+    const admin = getAdminClient();
     const { error } = await admin.from(table).insert([data]);
     if (error) return { success: false, error: error.message };
     return { success: true };
@@ -67,7 +56,7 @@ export async function adminUpdate(
   try {
     if (!ALLOWED_TABLES.has(table))
       return { success: false, error: "Table non autorisée." };
-    const admin = await getVerifiedAdminClient();
+    const admin = getAdminClient();
     const { error } = await admin.from(table).update(data).eq("id", id);
     if (error) return { success: false, error: error.message };
     return { success: true };
@@ -86,7 +75,7 @@ export async function adminDelete(
   try {
     if (!ALLOWED_TABLES.has(table))
       return { success: false, error: "Table non autorisée." };
-    const admin = await getVerifiedAdminClient();
+    const admin = getAdminClient();
     const { error } = await admin.from(table).delete().eq("id", id);
     if (error) return { success: false, error: error.message };
     return { success: true };

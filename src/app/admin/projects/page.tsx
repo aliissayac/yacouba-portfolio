@@ -3,6 +3,7 @@
 import { useState, useEffect, FormEvent, ChangeEvent } from "react";
 import { createClient } from "@/utils/supabase/client";
 import type { Database } from "@/utils/supabase/database.types";
+import { adminInsert, adminUpdate, adminDelete } from "../_actions";
 import {
   PlusIcon,
   TrashIcon,
@@ -153,14 +154,9 @@ export default function ProjectsEditorPage() {
 
     try {
       if (editingId) {
-        const { error } = await supabase
-          .from("projects")
-          .update(payload)
-          .eq("id", editingId);
-        if (error) throw error;
+        await adminUpdate("projects", editingId, payload);
       } else {
-        const { error } = await supabase.from("projects").insert([payload]);
-        if (error) throw error;
+        await adminInsert("projects", payload);
       }
 
       setMessage({
@@ -205,8 +201,7 @@ export default function ProjectsEditorPage() {
     if (!confirm("Supprimer ce projet ?")) return;
 
     try {
-      const { error } = await supabase.from("projects").delete().eq("id", id);
-      if (error) throw error;
+      await adminDelete("projects", id);
       setMessage({ type: "success", text: "Projet supprimé." });
       fetchProjects();
     } catch (err: unknown) {

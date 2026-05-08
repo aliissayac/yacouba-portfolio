@@ -3,6 +3,7 @@
 import { useState, useEffect, FormEvent, ChangeEvent } from "react";
 import { createClient } from "@/utils/supabase/client";
 import type { Database } from "@/utils/supabase/database.types";
+import { adminUpdate } from "../_actions";
 
 type HeroContent = Database["public"]["Tables"]["hero_content"]["Row"];
 
@@ -102,23 +103,18 @@ export default function HeroEditorPage() {
     setMessage(null);
 
     try {
-      const { error } = await supabase
-        .from("hero_content")
-        .update({
-          title: content.title,
-          subtitle: content.subtitle || null,
-          description: content.description || null,
-          badge_text: content.badge_text || null,
-          badge_status: content.badge_status || null,
-          stat_years: content.stat_years || null,
-          stat_projects: content.stat_projects || null,
-          stat_clients: content.stat_clients || null,
-          image_url: content.image_url || null,
-          cv_url: content.cv_url || null,
-        })
-        .eq("id", content.id);
-
-      if (error) throw error;
+      await adminUpdate("hero_content", content.id, {
+        title: content.title,
+        subtitle: content.subtitle || null,
+        description: content.description || null,
+        badge_text: content.badge_text || null,
+        badge_status: content.badge_status || null,
+        stat_years: content.stat_years || null,
+        stat_projects: content.stat_projects || null,
+        stat_clients: content.stat_clients || null,
+        image_url: content.image_url || null,
+        cv_url: content.cv_url || null,
+      });
 
       setMessage({
         type: "success",
@@ -157,15 +153,7 @@ export default function HeroEditorPage() {
 
       if (!content) return;
 
-      const { error: updateError } = await supabase
-        .from("hero_content")
-        .update({ image_url: publicUrl })
-        .eq("id", content.id);
-
-      if (updateError) {
-        console.error("Update error:", updateError);
-        throw new Error(updateError.message);
-      }
+      await adminUpdate("hero_content", content.id, { image_url: publicUrl });
 
       setContent((prev) => (prev ? { ...prev, image_url: publicUrl } : null));
       setMessage({
@@ -213,15 +201,7 @@ export default function HeroEditorPage() {
 
       if (!content) return;
 
-      const { error: updateError } = await supabase
-        .from("hero_content")
-        .update({ cv_url: publicUrl })
-        .eq("id", content.id);
-
-      if (updateError) {
-        console.error("Update error:", updateError);
-        throw new Error(updateError.message);
-      }
+      await adminUpdate("hero_content", content.id, { cv_url: publicUrl });
 
       setContent((prev) => (prev ? { ...prev, cv_url: publicUrl } : null));
       setMessage({

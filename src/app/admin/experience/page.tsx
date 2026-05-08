@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import type { Database } from '@/utils/supabase/database.types';
+import { adminInsert, adminUpdate, adminDelete } from '../_actions';
 import { PlusIcon, TrashIcon, PencilIcon, CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 type Experience = Database['public']['Tables']['experience']['Row'];
@@ -65,14 +66,9 @@ export default function ExperienceEditorPage() {
 
     try {
       if (editingId) {
-        const { error } = await supabase
-          .from('experience')
-          .update(payload)
-          .eq('id', editingId);
-        if (error) throw error;
+        await adminUpdate('experience', editingId, payload);
       } else {
-        const { error } = await supabase.from('experience').insert([payload]);
-        if (error) throw error;
+        await adminInsert('experience', payload);
       }
 
       setMessage({ type: 'success', text: editingId ? 'Expérience mise à jour !' : 'Expérience ajoutée !' });
@@ -103,8 +99,7 @@ export default function ExperienceEditorPage() {
     if (!confirm("Supprimer cette expérience ?")) return;
 
     try {
-      const { error } = await supabase.from('experience').delete().eq('id', id);
-      if (error) throw error;
+      await adminDelete('experience', id);
       setMessage({ type: 'success', text: 'Expérience supprimée.' });
       fetchExperiences();
     } catch (err: unknown) {

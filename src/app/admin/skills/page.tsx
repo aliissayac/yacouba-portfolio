@@ -3,6 +3,7 @@
 import { useState, useEffect, FormEvent } from "react";
 import { createClient } from "@/utils/supabase/client";
 import type { Database } from "@/utils/supabase/database.types";
+import { adminInsert, adminUpdate, adminDelete } from "../_actions";
 import {
   PlusIcon,
   TrashIcon,
@@ -81,11 +82,7 @@ export default function SkillsEditorPage() {
     );
 
     try {
-      const { error } = await supabase
-        .from("project_tags")
-        .insert([{ name: newToolName.trim(), sort_order: maxSortOrder + 1 }]);
-
-      if (error) throw error;
+      await adminInsert("project_tags", { name: newToolName.trim(), sort_order: maxSortOrder + 1 });
 
       setMessage({ type: "success", text: "Outil ajouté !" });
       setNewToolName("");
@@ -102,11 +99,7 @@ export default function SkillsEditorPage() {
     if (!confirm("Supprimer cet outil ?")) return;
 
     try {
-      const { error } = await supabase
-        .from("project_tags")
-        .delete()
-        .eq("id", id);
-      if (error) throw error;
+      await adminDelete("project_tags", id);
       setMessage({ type: "success", text: "Outil supprimé." });
       fetchTools();
     } catch (err: unknown) {
@@ -131,14 +124,9 @@ export default function SkillsEditorPage() {
 
     try {
       if (editingId) {
-        const { error } = await supabase
-          .from("skills")
-          .update(payload)
-          .eq("id", editingId);
-        if (error) throw error;
+        await adminUpdate("skills", editingId, payload);
       } else {
-        const { error } = await supabase.from("skills").insert([payload]);
-        if (error) throw error;
+        await adminInsert("skills", payload);
       }
 
       setMessage({
@@ -172,8 +160,7 @@ export default function SkillsEditorPage() {
     if (!confirm("Supprimer cette compétence ?")) return;
 
     try {
-      const { error } = await supabase.from("skills").delete().eq("id", id);
-      if (error) throw error;
+      await adminDelete("skills", id);
       setMessage({ type: "success", text: "Compétence supprimée." });
       fetchSkills();
     } catch (err: unknown) {

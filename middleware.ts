@@ -18,6 +18,12 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
+  if (pathname.startsWith("/api/admin/")) {
+    if (!user) {
+      return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
+    }
+  }
+
   if (pathname === "/admin" || pathname.startsWith("/admin/")) {
     if (!user) {
       return NextResponse.redirect(new URL("/admin-login", request.url));
@@ -28,5 +34,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/admin-login"],
+  matcher: ["/admin/:path*", "/admin-login", "/api/admin/:path*"],
 };

@@ -24,24 +24,6 @@ function getAdminSupabaseClient() {
   });
 }
 
-// Verify the bearer token using the admin client (avoids unreliable
-// cookie-based session reads in serverless API routes).
-async function getAuthenticatedUser(request: Request) {
-  const authorization = request.headers.get("authorization");
-  const token = authorization?.startsWith("Bearer ")
-    ? authorization.slice("Bearer ".length)
-    : null;
-
-  if (!token) return null;
-
-  try {
-    const admin = getAdminSupabaseClient();
-    const { data: { user } } = await admin.auth.getUser(token);
-    return user;
-  } catch {
-    return null;
-  }
-}
 
 function getSafeFileName(file: File, folder: string) {
   const originalName = file.name.toLowerCase();
@@ -77,12 +59,6 @@ function validateFile(file: File, folder: string) {
 }
 
 export async function POST(request: Request) {
-  const user = await getAuthenticatedUser(request);
-
-  if (!user) {
-    return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
-  }
-
   try {
     const formData = await request.formData();
     const file = formData.get("file");
